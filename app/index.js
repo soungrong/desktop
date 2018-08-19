@@ -1,4 +1,4 @@
-const {app, Menu, BrowserWindow, dialog, ipcMain} = require('electron');
+const {app, Menu, BrowserWindow, dialog, ipcMain, Tray} = require('electron');
 app.setName('Standard Notes');
 
 const path = require('path')
@@ -27,7 +27,8 @@ process.on('uncaughtException', function (err) {
 
 log.transports.file.level = 'info';
 
-let darwin = process.platform === 'darwin'
+let darwin = process.platform === 'darwin';
+let windows = process.platform === 'win32';
 let win, willQuitApp = false;
 
 // Quit when all windows are closed.
@@ -67,6 +68,27 @@ function createWindow () {
   packageManager.setWindow(win);
   updateManager.setWindow(win);
 
+var tray = new Tray(iconLocation)
+
+ var contextMenu = Menu.buildFromTemplate([
+     {
+         label: 'Show App', click: function () {
+             win.show()
+         }
+     },
+     {
+         label: 'Quit', click: function () {
+             willQuitApp = true;
+             app.quit()
+         }
+     }
+ ])
+
+ tray.setContextMenu(contextMenu)
+ tray.on('click', () => {
+   win.show()
+ })
+
   // Register listeners on the window, so we can update the state
   // automatically (the listeners will be removed when the window
   // is closed) and restore the maximized or full screen state
@@ -81,11 +103,20 @@ function createWindow () {
     win.show()
   })
 
+  // win.on('minimize',function(event){
+  //   event.preventDefault();
+  //   win.hide();
+  // });
+
+  win.on('show', function () {
+    tray.setHighlightMode('always')
+  })
+
   win.on('close', (e) => {
     if (willQuitApp) {
       /* the user tried to quit the app */
       win = null;
-    } else if(darwin) {
+    } else if(darwin || windows) {
       /* the user only tried to close the window */
       e.preventDefault();
 
@@ -93,7 +124,14 @@ function createWindow () {
       if(win.isFullScreen()) {
         win.setFullScreen(false);
       }
-      win.hide();
+
+      if(windows) {
+        win.minimize();
+      } else {
+        win.hide();
+      }
+
+      return false;
     }
   })
 
