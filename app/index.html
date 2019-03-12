@@ -258,6 +258,12 @@
       </div>
     </div>
     <div id="home" ng-controller="HomeCtrl" ng-include="'home.html'"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.3/mousetrap.min.js"></script>
+    <script>
+    Mousetrap.bind('ctrl+f', function(e) {
+      document.getElementById('search-bar').focus();
+    });
+    </script>
   </body>
 
 </html>
